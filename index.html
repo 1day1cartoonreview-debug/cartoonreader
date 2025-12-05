@@ -44,6 +44,9 @@
         .fade-in { animation: fadeIn 0.5s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
+        .fade-in-fast { animation: fadeInFast 0.3s ease-out forwards; }
+        @keyframes fadeInFast { from { opacity: 0.5; } to { opacity: 1; } }
+
         /* 커스텀 커서 */
         #custom-cursor {
             position: fixed; pointer-events: none; z-index: 9999;
@@ -251,14 +254,30 @@
             viewerLiked: false,
             viewerBookmarked: false,
             viewerComments: [],
+            profilePictureIndex: 0,
             profilePicture: 'https://pngimg.com/uploads/knight/knight_PNG57.png',
-            nowPlayingIndex: 0
+            nowPlayingIndex: 0,
+            isPlaying: false,
+            showMusicList: false,
+            profileStatus: "Struggling against causality... Collecting fragments of darkness.",
+            holyTrinity: ['BERSERK', 'AKIRA', 'EVANGELION']
         };
+
+        const profilePictures = [
+            'https://pngimg.com/uploads/knight/knight_PNG57.png',
+            'https://images.unsplash.com/photo-1589396512103-53c2534a683a?q=80&w=800&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', // 여성 기사
+            'https://images.unsplash.com/photo-1634823247789-54a83b3c67a8?q=80&w=800&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', // 사이버펑크 캐릭터
+            'https://images.unsplash.com/photo-1531386151447-fd76ad50012f?q=80&w=800&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', // 가면 쓴 인물
+            'https://images.unsplash.com/photo-1618005198919-d3d4b5a92ead?q=80&w=800&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D' // 추상적 이미지
+        ];
 
         const musicList = [
             { title: "Guts' Theme", artist: "Susumu Hirasawa" },
             { title: "Tank!", artist: "Seatbelts" },
-            { title: "A Cruel Angel's Thesis", artist: "Yoko Takahashi" }
+            { title: "A Cruel Angel's Thesis", artist: "Yoko Takahashi" },
+            { title: "Kaneda's Theme", artist: "Geinoh Yamashirogumi" },
+            { title: "Blade Runner Blues", artist: "Vangelis" },
+            { title: "The Ecstasy of Gold", artist: "Ennio Morricone" }
         ];
 
         window.addEventListener('DOMContentLoaded', () => {
@@ -400,10 +419,10 @@
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
                             <div class="space-y-2">
-                                ${weeklyTop.map(item => `
-                                    <div onclick="openModal('${item.title.replace(/\s/g, '').toUpperCase()}')" class="group relative flex items-center p-4 border-b border-white/5 hover:bg-white/5 transition-all cursor-pointer overflow-hidden">
+                                ${weeklyTop.map((item, index) => `
+                                    <div onclick="openModal('${item.title.replace(/\s/g, '').toUpperCase()}')" onmouseover="updateWeeklyRankingImage(${index})" class="group relative flex items-center p-4 border-b border-white/5 hover:bg-white/5 transition-all cursor-pointer overflow-hidden">
                                         <div class="absolute left-0 top-0 w-[2px] h-full bg-theme opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                                        <span class="font-museum text-3xl w-16 text-gray-600 group-hover:text-theme transition-colors italic">${item.rank}</span>
+                                        <span class="font-museum text-3xl w-16 text-gray-600 group-hover:text-theme transition-colors italic">${item.rank}</span> 
                                         <div class="flex-1">
                                             <h3 class="font-bold text-lg text-white group-hover:tracking-wider transition-all duration-300">${item.title}</h3>
                                             <p class="text-xs text-gray-500 font-cyber">${item.author}</p>
@@ -417,14 +436,14 @@
                                     </div>
                                 `).join('')}
                             </div>
-                            <div class="relative hidden md:block group cursor-pointer" onclick="openModal('${weeklyTop[0].title.replace(/\s/g, '').toUpperCase()}')">
+                            <div id="weekly-ranking-display" class="relative hidden md:block group cursor-pointer" onclick="openModal('${weeklyTop[0].title.replace(/\s/g, '').toUpperCase()}')">
                                 <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent z-10"></div>
-                                <img src="${weeklyTop[0].img}" class="w-full h-full object-cover filter grayscale group-hover:grayscale-0 transition-all duration-700" />
+                                <img id="weekly-ranking-image" src="${weeklyTop[0].img}" class="w-full h-full object-cover filter grayscale group-hover:grayscale-0 transition-all duration-700" />
                                 <div class="absolute top-4 right-4 z-20">
                                     <i data-lucide="star" class="w-12 h-12 text-theme fill-current drop-shadow-[0_0_15px_var(--theme-glow)] animate-pulse"></i>
                                 </div>
                                 <div class="absolute bottom-8 left-8 z-20">
-                                    <h3 class="font-museum text-6xl text-white mb-2 drop-shadow-lg">${weeklyTop[0].title}</h3>
+                                    <h3 id="weekly-ranking-title" class="font-museum text-6xl text-white mb-2 drop-shadow-lg">${weeklyTop[0].title}</h3>
                                     <p class="font-cyber text-sm text-theme tracking-widest">THE MOST READ COMIC OF THE WEEK</p>
                                 </div>
                             </div>
@@ -553,14 +572,17 @@
                                 <div class="bg-[#080808] border border-white/10 rounded-2xl p-8 flex flex-col items-center relative overflow-hidden group hover:border-white/20 transition-colors">
                                     <div class="w-32 h-32 rounded-full p-1 bg-gradient-to-br from-gray-800 to-black mb-6 relative">
                                         <img src="${state.profilePicture}" class="w-full h-full rounded-full object-cover filter grayscale contrast-125 bg-gray-900" />
-                                        <div class="absolute bottom-0 right-0 bg-[#1a1a1a] p-2 rounded-full border border-white/10 text-gray-400"><i data-lucide="camera" class="w-3 h-3"></i></div>
+                                        <button onclick="changeProfilePicture()" class="absolute bottom-0 right-0 bg-[#1a1a1a] p-2 rounded-full border border-white/10 text-gray-400 hover:bg-theme hover:text-white transition-colors"><i data-lucide="camera" class="w-3 h-3"></i></button>
                                     </div>
                                     <h2 class="font-museum text-3xl text-white mb-2">UNKNOWN</h2>
                                     <div class="flex items-center gap-2 text-[10px] font-cyber text-gray-500 uppercase tracking-widest mb-8">
                                         <i data-lucide="settings" class="w-3 h-3 animate-spin"></i> Archivist • Lv. 99
                                     </div>
-                                    <div class="w-full relative pl-4 border-l-2 border-theme py-2 mb-8 bg-white/5 rounded-r">
-                                        <p class="font-museum text-sm text-gray-300 italic">"Struggling against causality... Collecting fragments of darkness."</p>
+                                    <div class="w-full relative pl-4 border-l-2 border-theme py-2 mb-8 bg-white/5 rounded-r group">
+                                        <p class="font-museum text-sm text-gray-300 italic pr-8">"${state.profileStatus}"</p>
+                                        <button onclick="editProfileStatus()" class="absolute top-1/2 right-2 -translate-y-1/2 p-1 text-gray-600 opacity-0 group-hover:opacity-100 hover:text-white transition-opacity">
+                                            <i data-lucide="pencil" class="w-3 h-3"></i>
+                                        </button>
                                     </div>
                                     <div class="w-full grid grid-cols-3 divide-x divide-white/10 pt-6 border-t border-white/10">
                                         <div class="text-center"><span class="block text-xl font-bold text-white">42</span><span class="text-[9px] font-cyber text-gray-500 uppercase">Collection</span></div>
@@ -568,21 +590,37 @@
                                         <div class="text-center"><span class="block text-xl font-bold text-white">3.5k</span><span class="text-[9px] font-cyber text-gray-500 uppercase">Visits</span></div>
                                     </div>
                                 </div>
-                                <div class="bg-[#080808] border border-white/10 rounded-2xl p-6 flex items-center gap-5 relative overflow-hidden">
-                                    <div class="absolute bottom-0 left-0 h-[2px] bg-theme w-1/3 z-10"></div>
-                                    <div class="w-12 h-12 bg-black rounded-full border border-white/10 flex items-center justify-center relative shrink-0">
-                                        <div class="w-3 h-3 bg-[#222] rounded-full"></div>
-                                        <div class="absolute inset-0 rounded-full border-2 border-transparent border-t-theme/50 animate-spin"></div>
-                                    </div>
-                                    <div class="flex-1 overflow-hidden">
-                                        <div class="flex justify-between items-center mb-1">
-                                            <span class="text-[8px] font-cyber text-theme uppercase tracking-wider">Now Playing</span>
-                                            <i data-lucide="list-music" class="w-3 h-3 text-gray-600"></i>
+                                <div class="bg-[#080808] border border-white/10 rounded-2xl relative overflow-hidden transition-all duration-300 ${state.showMusicList ? 'h-auto' : 'h-24'}">
+                                    <div class="p-6 flex items-center gap-5">
+                                        <div class="absolute bottom-0 left-0 h-[2px] bg-theme w-1/3 z-10"></div>
+                                        <div class="w-12 h-12 bg-black rounded-full border border-white/10 flex items-center justify-center relative shrink-0">
+                                            <div class="w-3 h-3 bg-[#222] rounded-full"></div>
+                                            <div class="absolute inset-0 rounded-full border-2 border-transparent border-t-theme/50 ${state.isPlaying ? 'animate-spin' : ''}"></div>
                                         </div>
-                                        <h4 class="font-bold text-sm text-white truncate">Guts' Theme</h4>
-                                        <p class="text-[10px] text-gray-500">Susumu Hirasawa</p>
+                                        <div class="flex-1 overflow-hidden">
+                                            <div class="flex justify-between items-center mb-1">
+                                                <span class="text-[8px] font-cyber text-theme uppercase tracking-wider">Now Playing</span>
+                                                <button onclick="toggleMusicList()" class="text-gray-600 hover:text-white"><i data-lucide="list-music" class="w-3 h-3"></i></button>
+                                            </div>
+                                            <h4 class="font-bold text-sm text-white truncate">${musicList[state.nowPlayingIndex].title}</h4>
+                                            <p class="text-[10px] text-gray-500">${musicList[state.nowPlayingIndex].artist}</p>
+                                        </div>
+                                        <button onclick="togglePlay()" class="w-8 h-8 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 text-white transition-colors shrink-0">
+                                            <i data-lucide="${state.isPlaying ? 'pause' : 'play'}" class="w-3 h-3 fill-current"></i>
+                                        </button>
                                     </div>
-                                    <button class="w-8 h-8 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 text-white transition-colors"><i data-lucide="play" class="w-3 h-3 fill-current"></i></button>
+                                    <div id="music-list-container" class="px-6 pb-4 space-y-2 overflow-hidden transition-all duration-300 ${state.showMusicList ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0'}">
+                                        <div class="h-[1px] w-full bg-white/10 my-2"></div>
+                                        ${musicList.map((song, index) => `
+                                            <div onclick="changeSong(${index})" class="flex items-center justify-between p-2 rounded hover:bg-white/5 cursor-pointer text-xs ${index === state.nowPlayingIndex ? 'text-theme' : 'text-gray-400'}">
+                                                <div class="flex items-center gap-3">
+                                                    ${index === state.nowPlayingIndex ? '<i data-lucide="volume-2" class="w-3 h-3"></i>' : '<i data-lucide="music" class="w-3 h-3"></i>'}
+                                                    <span>${song.title}</span>
+                                                </div>
+                                                <span class="text-gray-600">${song.artist}</span>
+                                            </div>
+                                        `).join('')}
+                                    </div>
                                 </div>
                             </div>
                             <div class="lg:col-span-8 space-y-8">
@@ -592,21 +630,18 @@
                                             <span class="font-cyber text-[10px] text-theme tracking-[0.2em] uppercase mb-1 block">Curator's Choice</span>
                                             <h3 class="font-museum text-3xl text-white">THE HOLY TRINITY</h3>
                                         </div>
-                                        <button class="text-[10px] font-cyber text-gray-500 flex items-center gap-2 hover:text-white transition-colors">MANAGE COLLECTION <i data-lucide="arrow-right" class="w-3 h-3"></i></button>
+                                        <button onclick="openTrinityManager()" class="text-[10px] font-cyber text-gray-500 flex items-center gap-2 hover:text-white transition-colors">MANAGE COLLECTION <i data-lucide="arrow-right" class="w-3 h-3"></i></button>
                                     </div>
                                     <div class="grid grid-cols-3 gap-4">
-                                        <div class="aspect-[3/4] relative bg-[#080808] border border-white/10 rounded overflow-hidden group cursor-pointer" onclick="openModal('BERSERK')">
-                                            <img src="https://images.unsplash.com/photo-1509048191080-d2984bad6ae5?q=80&w=400" class="w-full h-full object-cover opacity-60 group-hover:opacity-100 grayscale transition-all duration-500" />
-                                            <div class="absolute bottom-0 left-0 w-full p-4 bg-gradient-to-t from-black to-transparent"><h4 class="font-museum text-lg text-white">BERSERK</h4></div>
-                                        </div>
-                                        <div class="aspect-[3/4] relative bg-[#080808] border border-white/10 rounded overflow-hidden group cursor-pointer" onclick="openModal('AKIRA')">
-                                            <img src="https://images.unsplash.com/photo-1535905557558-afc4877a26fc?q=80&w=400" class="w-full h-full object-cover opacity-60 group-hover:opacity-100 grayscale transition-all duration-500" />
-                                            <div class="absolute bottom-0 left-0 w-full p-4 bg-gradient-to-t from-black to-transparent"><h4 class="font-museum text-lg text-white">AKIRA</h4></div>
-                                        </div>
-                                        <div class="aspect-[3/4] relative bg-[#080808] border border-white/10 rounded overflow-hidden group cursor-pointer" onclick="openModal('EVANGELION')">
-                                            <img src="https://images.unsplash.com/photo-1519638399535-1b036603ac77?q=80&w=400" class="w-full h-full object-cover opacity-60 group-hover:opacity-100 grayscale transition-all duration-500" />
-                                            <div class="absolute bottom-0 left-0 w-full p-4 bg-gradient-to-t from-black to-transparent"><h4 class="font-museum text-lg text-white">EVANGELION</h4></div>
-                                        </div>
+                                        ${state.holyTrinity.map(comicId => {
+                                            const comic = comicsData[comicId];
+                                            return `
+                                                <div class="aspect-[3/4] relative bg-[#080808] border border-white/10 rounded overflow-hidden group cursor-pointer" onclick="openModal('${comicId}')">
+                                                    <img src="${comic.thumb}" class="w-full h-full object-cover opacity-60 group-hover:opacity-100 grayscale transition-all duration-500" />
+                                                    <div class="absolute bottom-0 left-0 w-full p-4 bg-gradient-to-t from-black to-transparent"><h4 class="font-museum text-lg text-white">${comic.title}</h4></div>
+                                                </div>
+                                            `;
+                                        }).join('')}
                                     </div>
                                 </div>
                             </div>
@@ -616,6 +651,27 @@
             }
             lucide.createIcons();
             setTimeout(() => container.classList.remove('fade-in-out'), 800);
+        }
+
+        function updateWeeklyRankingImage(index) {
+            const item = weeklyTop[index];
+            if (!item) return;
+
+            const display = document.getElementById('weekly-ranking-display');
+            const image = document.getElementById('weekly-ranking-image');
+            const title = document.getElementById('weekly-ranking-title');
+
+            image.src = item.img;
+            title.innerText = item.title;
+            display.setAttribute('onclick', `openModal('${item.title.replace(/\s/g, '').toUpperCase()}')`);
+            image.classList.add('fade-in-fast');
+            setTimeout(() => image.classList.remove('fade-in-fast'), 300);
+        }
+
+        function changeProfilePicture() {
+            state.profilePictureIndex = (state.profilePictureIndex + 1) % profilePictures.length;
+            state.profilePicture = profilePictures[state.profilePictureIndex];
+            renderTab('PROFILE');
         }
 
         function handleSearch(event) {
@@ -758,7 +814,7 @@
             grid.innerHTML = `
                 <div class="aspect-[3/4] border border-dashed border-white/10 rounded-sm flex flex-col items-center justify-center gap-4 text-gray-600 hover:text-white hover:border-white/30 cursor-pointer transition-colors bg-[#0a0a0a]/50 hover:bg-white/5 active:scale-95 group">
                     <div class="w-12 h-12 rounded-full border border-current flex items-center justify-center transition-transform group-hover:rotate-90"><i data-lucide="plus" class="w-6 h-6"></i></div>
-                    <span class="font-cyber text-xs tracking-widest uppercase">ADD SCRAP</span>
+                    <span class="font-cyber text-xs tracking-widest uppercase">ADD SCRAP</span> 
                 </div>
                 ${filteredScraps.map(item => `
                     <div class="group relative bg-[#0a0a0a] border border-white/5 rounded-sm overflow-hidden hover:border-white/20 transition-all duration-300">
@@ -824,6 +880,64 @@
 
         function closeModal() {
             document.getElementById('modal-overlay').classList.add('hidden');
+        }
+
+        function openTrinityManager() {
+            const modalContent = document.getElementById('modal-content');
+            let tempSelection = [...state.holyTrinity];
+
+            function renderManagerContent() {
+                modalContent.innerHTML = `
+                    <div class="flex flex-col h-full">
+                        <div class="p-6 border-b border-white/10">
+                            <h2 class="font-museum text-2xl text-white">Manage Holy Trinity</h2>
+                            <p class="font-cyber text-xs text-gray-500 mt-1">Select up to 3 masterpieces for your collection.</p>
+                        </div>
+                        <div class="flex-1 p-6 overflow-y-auto grid grid-cols-2 md:grid-cols-3 gap-4">
+                            ${Object.keys(comicsData).map(comicId => {
+                                const comic = comicsData[comicId];
+                                const isSelected = tempSelection.includes(comicId);
+                                return `
+                                    <div onclick="toggleTrinitySelection('${comicId}')" class="aspect-[3/4] relative rounded overflow-hidden group cursor-pointer border-2 ${isSelected ? 'border-theme' : 'border-transparent'} transition-all">
+                                        <img src="${comic.thumb}" class="w-full h-full object-cover opacity-70 group-hover:opacity-100 transition-opacity" />
+                                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
+                                        <div class="absolute bottom-0 left-0 w-full p-3">
+                                            <h4 class="font-museum text-sm text-white truncate">${comic.title}</h4>
+                                        </div>
+                                        ${isSelected ? `<div class="absolute top-2 right-2 w-5 h-5 bg-theme rounded-full flex items-center justify-center text-black"><i data-lucide="check" class="w-3 h-3"></i></div>` : ''}
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                        <div class="p-4 border-t border-white/10 flex justify-end gap-3 bg-[#0a0a0a]">
+                            <button onclick="closeModal()" class="px-6 py-2 text-xs font-cyber border border-white/20 rounded hover:bg-white/10">CANCEL</button>
+                            <button onclick="saveTrinitySelection()" class="px-6 py-2 text-xs font-cyber bg-theme text-black font-bold rounded hover:opacity-90">SAVE CHANGES</button>
+                        </div>
+                    </div>
+                `;
+                lucide.createIcons();
+            }
+
+            window.toggleTrinitySelection = (comicId) => {
+                const index = tempSelection.indexOf(comicId);
+                if (index > -1) {
+                    tempSelection.splice(index, 1);
+                } else if (tempSelection.length < 3) {
+                    tempSelection.push(comicId);
+                } else {
+                    alert("You can only select up to 3 items.");
+                }
+                renderManagerContent();
+            };
+
+            window.saveTrinitySelection = () => {
+                state.holyTrinity = [...tempSelection];
+                closeModal();
+                renderTab('PROFILE');
+            };
+
+            renderManagerContent();
+            document.getElementById('modal-overlay').classList.remove('hidden');
         }
 
         function openViewer(episodeData) {
@@ -1034,6 +1148,30 @@
             btn.classList.toggle('text-theme', state.viewerBookmarked);
             icon.classList.toggle('fill-current', state.viewerBookmarked);
         }
+
+        function togglePlay() {
+            state.isPlaying = !state.isPlaying;
+            renderTab('PROFILE');
+        }
+
+        function toggleMusicList() {
+            state.showMusicList = !state.showMusicList;
+            renderTab('PROFILE');
+        }
+
+        function changeSong(index) {
+            state.nowPlayingIndex = index;
+            renderTab('PROFILE');
+        }
+
+        function editProfileStatus() {
+            const newStatus = prompt("Enter new status message:", state.profileStatus);
+            if (newStatus !== null && newStatus.trim() !== "") {
+                state.profileStatus = newStatus;
+                renderTab('PROFILE');
+            }
+        }
+
 
         function addComment(event) {
             if (event.key === 'Enter') {
